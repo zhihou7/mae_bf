@@ -1,0 +1,115 @@
+#!/bin/bash
+#PBS -P ZHIHOU
+#PBS -l select=8:ngpus=1:ncpus=6:mem=28GB
+#PBS -l walltime=80:00:00
+#PBS -q alloc-dt
+source activate pyt
+
+#env
+
+cd "$PBS_O_WORKDIR"
+
+#
+#python run.py --nproc_per_node 1 --master_port 28523 --nnodes 8 ./configs/tiny.sh --add_global 64 --batch-size 64 \
+#--model deit_small_patch16_224 --output_dir small_output_g64_node8 --clip-grad 1. &> small_output_g64_node8.out
+#
+#python run.py --nproc_per_node 1 --master_port 28511 --nnodes 8 ./configs/tiny.sh --add_global 57 --batch-size 2 \
+#--model deit_tiny_patch16_224 --output_dir tiny_output_g57_node8_mlp --add_mlp_bt 1 --resume tiny_output_g57_node8_mlp/checkpoint.pth --skip_bt &>> tiny_output_g57_node8_mlp.out
+
+#python run.py --nproc_per_node 1 --master_port 28519 --nnodes 8 ./configs/tiny.sh --add_global 74 --batch-size 128 \
+#--model small_tiny_patch16_224 --output_dir small_output_g74_node8_stx9_btd5 --start_idx 9 --bt_decay 0.5 --shared_bt 0 --add_norm_bt 0 &>> small_output_g74_node8_stx9_btd5.out
+
+
+python run.py --nproc_per_node 1 --master_port 28519 --nnodes 8 ./configs/tiny.sh --add_global 81 --batch-size 128 \
+--model deit_small_patch16_224 --output_dir small_output_g81_node8_ins8_mlp_lr7 --lr 7e-4 --insert_idx 8 --add_mlp_bt 1 &>> small_output_g81_node8_ins8_mlp_lr7.out
+
+
+#
+
+#python run.py --nproc_per_node 1 --master_port 28527 --nnodes 8 ./configs/tiny.sh --add_global 70 --batch-size 128 \
+#--model deit_small_patch16_224 --output_dir small_output_g70_node8 --clip-grad 2. --drop_path_bt 0.5 &> small_output_g70_node8.out
+
+##
+#python run.py --nproc_per_node 1 --master_port 28529 --nnodes 8 ./configs/tiny.sh --add_global 71 --batch-size 128 \
+#--model deit_small_patch16_224 --output_dir small_output_g71_node8_8_empty_lr7 --empty_bt 1 --lr 7e-4 --clip-grad 2. --start_idx 8 &> small_output_g71_node8_8_empty_lr7.out
+
+#python run.py --nproc_per_node 1 --master_port 28522 --nnodes 8 ./configs/tiny.sh --add_global 57 --batch-size 128 --no_fp16_bt 2 \
+#--model deit_small_patch16_224 --output_dir small_output_g57_st9_norm_node8_fp2 --start_idx 9 --clip-grad 2. --shared_bt 1 --add_norm_bt 1 --add_mlp_bt 0 &> small_output_g57_st9_norm_node8_fp2.out
+#
+
+#python run.py --nproc_per_node 1 --master_port 28528 --nnodes 8 ./configs/tiny.sh --add_global 57 --batch-size 128 --no_fp16_bt 2 \
+#--model deit_small_patch16_224 --output_dir small_output_g57_st8_node8_fp2_mlp --start_idx 8 --clip-grad 2. --shared_bt 1 --add_norm_bt 0 --add_mlp_bt 1 &> small_output_g57_st8_node8_fp2_mlp.out
+#
+#python run.py --nproc_per_node 1 --master_port 28521 --nnodes 8 ./configs/tiny.sh --add_global 71 --batch-size 128 --lr 8e-4 \
+#--model deit_small_patch16_224 --output_dir small_output_g71_node8_4_lr8 --clip-grad 2. --start_idx 4 &> small_output_g71_node8_lr8.out
+#
+#python run.py --nproc_per_node 1 --master_port 28521 --nnodes 8 ./configs/tiny.sh --add_global 70 --batch-size 128 \
+#--model deit_small_patch16_224 --output_dir small_output_g70_node8_d8 --clip-grad 2. --start_idx 8 --drop_path_bt 0.8 &>> small_output_g70_node8_d8.out
+#
+#
+#python run.py --nproc_per_node 1 --master_port 28522 --nnodes 8 ./configs/tiny.sh --add_global 71 --batch-size 128 --lr 7e-4 \
+#--model deit_small_patch16_224 --output_dir small_output_g71_node8_8_lr7 --clip-grad 1. --start_idx 8  &>> small_output_g71_node8_8_lr7.out
+
+#python run.py --nproc_per_node 1 --master_port 28521 --nnodes 8 ./configs/tiny.sh --add_global 71 --batch-size 128 --lr 7e-4 \
+#--model deit_small_patch16_224 --output_dir small_output_g71_node8_8_lr7 --clip-grad 1. --start_idx 8 \
+#--resume small_output_g71_node8_8_lr7/checkpoint.pth --no_fp16_bt 1  &>> small_output_g71_node8_8_lr7_fp.out
+#
+#python run.py --nproc_per_node 1 --master_port 28521 --nnodes 8 ./configs/tiny.sh --add_global 70 --batch-size 128 --model deit_small_patch16_224 \
+#--output_dir small_output_g70_node8_d8_atten_only --clip-grad 1. --start_idx 8 --no_fp16_bt 1 --drop_path_bt 0.5 &>> small_output_g70_node8_d8_atten_only.out
+
+#python run.py --nproc_per_node 1 --master_port 28524 --nnodes 8 ./configs/tiny.sh --add_global 70 --batch-size 128 --model deit_small_patch16_224 \
+#--output_dir small_output_g70_node8_d4_atten_only --clip-grad 1. --start_idx 4 --no_fp16_bt 1 --drop_path_bt 0.5 &>> small_output_g70_node8_d4_atten_only.out
+
+
+#python run.py --nproc_per_node 1 --master_port 28524 --nnodes 8 ./configs/tiny.sh --add_global 71 --batch-size 128 --model deit_small_patch16_224 --lr 7e-4 \
+#--output_dir small_output_g71_node8_8_lr7_shuffle_patch --clip-grad 1. --no_fp16_bt 1 --start_idx 8 --shuffle_patch &>> small_output_g71_node8_8_lr7_shuffle_patch.out
+
+#python run.py --nproc_per_node 1 --master_port 28524 --nnodes 8 ./configs/tiny.sh --add_global 71 --batch-size 128 --model deit_small_patch16_224 --lr 7e-4 \
+#--output_dir small_output_g71_node8_8_lr7_shuffle_patch --drop_path_bt 0. --clip-grad 1. --no_fp16_bt 2 --start_idx 8 --shuffle_patch &>> small_output_g71_node8_8_lr7_shuffle_patch.out
+
+
+#python run.py --nproc_per_node 1 --master_port 28529 --nnodes 8 ./configs/tiny.sh --add_global 55 --batch-size 128 --model deit_small_patch16_224 \
+#--output_dir small_output_g55_d5_node8_st10_shuffle_patch --clip-grad 1. --drop_path_bt 0.5 --no_fp16_bt 2 --add_norm_bt 0 --shared_bt 0 --start_idx 10 --shuffle_patch &>> small_output_g55_d5_node8_st10_shuffle_patch.out
+
+#python run.py --nproc_per_node 1 --master_port 28529 --nnodes 8 ./configs/tiny.sh --add_global 57 --batch-size 128 --model deit_small_patch16_224 \
+#--output_dir small_output_g57_node8_st8_btd25 --clip-grad 1. --add_norm_bt 1 --shared_bt 0 --start_idx 8 --bt_decay 0.25 &>> small_output_g57_node8_st8_btd25.out
+
+
+
+#
+#python run.py --nproc_per_node 1 --master_port 28527 --nnodes 8 ./configs/tiny.sh --add_global 73 --batch-size 128 --model deit_small_patch16_224 \
+#--output_dir small_output_g73_d5_node8_st10 --clip-grad 1. --drop_path_bt 0.5 --no_fp16_bt 2 --add_norm_bt 0 --shared_bt 0 --start_idx 10 &>> small_output_g73_d5_node8_st10.out
+
+
+#python run.py --nproc_per_node 1 --master_port 28523 --nnodes 8 ./configs/tiny.sh --add_global 55 --batch-size 128 \
+#    --model deit_tiny_patch16_224 --output_dir deit_tiny_patch16_d9_224_g55_st0 \
+#    --drop_path_bt 0.9 --clip-grad 2. --start_idx 0 --no_fp16_bt 2 &>> deit_tiny_patch16_d9_224_g55_st0.out \
+
+#python run.py --nproc_per_node 1 --master_port 28525 --nnodes 8 ./configs/tiny.sh --add_global 0 --batch-size 128 \
+#    --model deit_small_patch16_224 --output_dir deit_small_patch16_224_g0_st0_drop_patch --drop_patch 0.5 --start_idx 0 \
+#    --clip-grad 2. &>> deit_small_patch16_224_g0_st0_drop_patch.out
+
+#python run.py --nproc_per_node 1 --master_port 28525 --nnodes 8 ./configs/tiny.sh --add_global 0 --batch-size 128 \
+#    --model deit_small_patch16_224 --output_dir deit_small_patch16_224_g0_drop_patch --drop_patch 0.8 --start_idx 6 \
+#    --clip-grad 2. &>> deit_small_patch16_224_g0_drop_patch.out
+
+#python run.py --nproc_per_node 1 --master_port 28526 --nnodes 8 ./configs/tiny.sh --add_global 0 --batch-size 128 \
+#    --model deit_small_patch16_224 --output_dir deit_small_patch16_224_d4_g0_drop_patch --drop_patch 0.4 --start_idx 6 \
+#    --clip-grad 2. &>> deit_small_patch16_224_d4_g0_drop_patch.out
+
+
+#python run.py --nproc_per_node 1 --master_port 28527 --nnodes 8 ./configs/tiny.sh --add_global 0 --batch-size 128 \
+#    --model deit_small_patch16_224 --output_dir deit_small_patch16_224_dn1_fp1_st0_g0_drop_patch --drop_patch -1 --start_idx 0 --no_fp16_bt 1 \
+#    --clip-grad 2. &>> deit_small_patch16_224_dn1_fp1_st0_g0_drop_patch.out
+
+#python run.py --nproc_per_node 1 --master_port 28528 --nnodes 8 ./configs/tiny.sh --add_global 0 --batch-size 128 \
+#    --model deit_small_patch16_224 --output_dir deit_small_patch16_224_d2_g0_drop_patch --drop_patch 0.2 --start_idx 6 \
+#    --clip-grad 2. &>> deit_small_patch16_224_d2_g0_drop_patch.out
+
+#python run.py --nproc_per_node 1 --master_port 28523 --nnodes 8 ./configs/tiny.sh --add_global 70 --batch-size 64 --model deit_base_patch16_224 \
+#--output_dir base_output_g70_node8_d8_atten_only --clip-grad 1. --start_idx 8 --no_fp16_bt 1 --drop_path_bt 0.5 &>> base_output_g70_node8_d8_atten_only.out
+
+
+
+#python run.py --nproc_per_node 1 --master_port 28522 --nnodes 8 ./configs/tiny.sh --add_global 71 --batch-size 64 --lr 5e-4 \
+#--model deit_base_patch16_224 --output_dir base_output_g71_node8_8_lr5 --clip-grad 1. --start_idx 8 &>> base_output_g71_node8_8_lr5.out
