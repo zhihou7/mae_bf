@@ -202,6 +202,8 @@ class MaskedAutoencoderViT(nn.Module):
         mask: [N, L], 0 is keep, 1 is remove, 
         """
         target = self.patchify(imgs)
+        if len(target) < len(pred):
+            target = torch.cat([target, target], dim=0)
         if self.norm_pix_loss:
             mean = target.mean(dim=-1, keepdim=True)
             var = target.var(dim=-1, keepdim=True)
