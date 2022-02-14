@@ -219,6 +219,7 @@ class MaskedAutoencoderViT(nn.Module):
         latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio)
         if len(latent) > len(ids_restore):
             ids_restore = torch.cat([ids_restore, ids_restore], dim=0)
+            mask = torch.cat([mask, mask], dim=0)
         pred = self.forward_decoder(latent, ids_restore)  # [N, L, p*p*3]
         loss = self.forward_loss(imgs, pred, mask)
         return loss, pred, mask
