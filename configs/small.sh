@@ -20,3 +20,12 @@ python main_pretrain.py \
     --warmup_epochs 40 \
     --blr 1.5e-4 --weight_decay 0.05 \
     --data_path /project/ZHIHOUDATA/Code/RIDE-LongTailRecognition/data/ImageNet_LT/  ${PY_ARGS}
+
+python main_linprobe.py \
+    --batch_size 512 \
+    --model vit_base_patch16 --cls_token \
+    --epochs 90 \
+    --blr 0.1 \
+    --weight_decay 0.0 \
+    --add_global 74 \
+    --dist_eval --data_path /project/ZHIHOUDATA/Code/RIDE-LongTailRecognition/data/ImageNet_LT/
