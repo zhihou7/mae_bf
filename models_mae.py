@@ -36,6 +36,7 @@ class MaskedAutoencoderViT(nn.Module):
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim), requires_grad=False)  # fixed sin-cos embedding
         self.num_features = embed_dim
+        self.decoder_embed_dim = decoder_embed_dim
         self.blocks = nn.ModuleList([
             Block(embed_dim, num_heads, mlp_ratio, qkv_bias=True, norm_layer=norm_layer)
             for i in range(depth)])
@@ -204,6 +205,8 @@ class MaskedAutoencoderViT(nn.Module):
         target = self.patchify(imgs)
         if len(target) < len(pred):
             target = torch.cat([target, target], dim=0)
+        if len(mask) < len(pred):
+            mask = torch.cat([mask, mask], dim=0)
         if self.norm_pix_loss:
             mean = target.mean(dim=-1, keepdim=True)
             var = target.var(dim=-1, keepdim=True)
