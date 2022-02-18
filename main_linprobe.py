@@ -238,10 +238,10 @@ def main(args):
         num_classes=args.nb_classes,
         global_pool=args.global_pool,
     )
-    if args.add_global:
+    if args.add_global and not args.put_decoder:
         from bt import TransformerDecorator1, BlockWrap, BlockBF, BlockWrap32, BlockWrapDebug, AttentionOnly, MLPDecorder, MLPEncoder
         
-        num_features = model.decoder_embed_dim if args.put_decoder else model.num_features
+        num_features = model.num_features
         encoder_global = TransformerDecorator1(args.add_global, num_features, args.eval_global, dropout=args.dropout,
                                             small_seq=args.small_seq, args=args, drop_path=args.drop_path_bt)
         insert_blocks = model.blocks
