@@ -149,6 +149,54 @@ def get_args_parser():
                         help='number of distributed processes')
     parser.add_argument('--local_rank', default=-1, type=int)
     parser.add_argument('--dist_on_itp', action='store_true')
+    
+    # BT
+    parser.add_argument('--add_global', default=0, type=int,
+                        help='add_global')
+    parser.add_argument('--eval_global', default=0, type=int,
+                        help='eval_global')
+    parser.add_argument('--dropout', default=0., type=float,
+                        help='dropout')
+    parser.add_argument('--exp_id', default="", type=str,
+                        help='exp_id')
+    parser.add_argument('--decay_drop_bt', default=0., type=float,
+                        help='drop_patch')
+    parser.add_argument('--drop_patch', default=0., type=float,
+                        help='drop_patch')
+    parser.add_argument('--shuffle_patch', action='store_true', )
+    parser.add_argument('--no_fp16_bt', default=0, type=int,
+                        help='no_fp16_bt')
+    parser.add_argument('--num_heads', default=4, type=int,
+                        help='num_heads')
+    parser.add_argument('--start_idx', default=8, type=int,
+                        help='start_idx: start bt layer index')
+    parser.add_argument('--start_bt_epoch', default=0, type=int,
+                        help='start_bt_epoch: start bt layer index')
+    parser.add_argument('--insert_idx', action='append', type=int,
+                        help='insert idx list')
+    parser.add_argument('--small_seq', action='store_true',)
+    parser.add_argument('--all_patches', action='store_true',)
+    parser.add_argument('--drop_path_bt', default=0., type=float)
+    parser.add_argument('--not_cls_token', action='store_true'),
+    parser.add_argument('--cls_token_only', action='store_true'),
+    parser.add_argument('--shared_bt', default=1, type=int,),
+    parser.add_argument('--empty_bt', default=0, type=int,),
+    parser.add_argument('--add_norm_bt', default=1, type=int,),
+    parser.add_argument('--add_mlp_bt', default=0, type=int,),
+    parser.add_argument('--mlp_enc', default=0, type=int,),
+    parser.add_argument('--no_grad_bt', default=0, type=int,),
+    parser.add_argument('--bt_decay', default=0., type=float,
+                        help='drop_patch')
+    parser.add_argument('--mlp_decay', default=0., type=float,
+                       help='drop_patch')
+    parser.add_argument('--bt_lr', default=0.5, type=float,)
+    parser.add_argument('--skip_bt', action='store_true',)
+    parser.add_argument('--pretrained', action='store_true',
+                        help='pretrained')
+    parser.add_argument('--drop', type=float, default=0.0, metavar='PCT',
+                        help='Dropout rate (default: 0.)')
+    parser.add_argument('--put_decoder', action='store_true',)
+
     parser.add_argument('--dist_url', default='env://',
                         help='url used to set up distributed training')
 
@@ -229,6 +277,99 @@ def main(args):
         drop_path_rate=args.drop_path,
         global_pool=args.global_pool,
     )
+    if args.add_global and not args.put_decoder:
+        from bt import TransformerDecorator1, BlockWrap, BlockBF, BlockWrap32, BlockWrapDebug, AttentionOnly, MLPDecorder, MLPEncoder
+        
+        num_features = model.num_features
+        encoder_global = TransformerDecorator1(args.add_global, num_features, args.eval_global, dropout=args.dropout,
+                                            small_seq=args.small_seq, args=args, drop_path=args.drop_path_bt)
+        insert_blocks = model.blocks
+        
+        if args.put_decoder:
+            insert_blocks = model.decoder_blocks
+        if args.add_global in [53, 63]:
+            res_blocks = []
+            for i, block in enumerate(insert_blocks):
+                if args.no_fp16_bt and args.no_fp16_bt not in [4]:
+                    res_blocks.append(BlockWrap32(block, args.no_fp16_bt))
+                else:
+                    res_blocks.append(block)
+            model.norm = torch.nn.Sequential(model.norm, encoder_global)
+        elif args.add_global in [55, 74, 70, 76, 71, 81, 82, 75]:
+            res_blocks = []
+            if args.decay_drop_bt > 0.:
+                step_drop = (args.drop_path_bt - args.decay_drop_bt) / (len(insert_blocks) - 2 - args.start_idx)  # do not use start_idx block
+
+                drop_rate_list = [step_drop*(d-args.start_idx -1) + args.decay_drop_bt if d > args.start_idx else 0 for d in range(0, len(insert_blocks))]
+            else:
+                drop_rate_list = [args.drop_path_bt]*(len(insert_blocks)+1)
+            if args.insert_idx is not None and len(args.insert_idx) > 0:
+                insert_list = args.insert_idx
+            else:
+                insert_list = list(range(args.start_idx, len(insert_blocks)))
+            if args.add_global in [70, 76, 71, 81, 82, 75]:
+                assert args.insert_idx and len(args.insert_idx) > 0, "you should use insert idx"
+            for i, block in enumerate(insert_blocks):
+                if args.no_fp16_bt and args.no_fp16_bt not in [4]:
+                    res_blocks.append(BlockWrap32(block, args.no_fp16_bt))
+                else:
+                    res_blocks.append(block)
+                if i in insert_list:
+                    if not args.shared_bt:
+                        encoder_global = TransformerDecorator1(args.add_global, num_features, args.eval_global, dropout=args.dropout,
+                                                           small_seq=args.small_seq, args=args, drop_path=drop_rate_list[i])
+                    res_blocks.append(encoder_global)
+            if args.add_norm_bt:
+                if not args.shared_bt:
+                    encoder_global = TransformerDecorator1(args.add_global, num_features, args.eval_global, dropout=args.dropout,
+                                                           small_seq=args.small_seq, args=args, drop_path=args.drop_path_bt)
+                model.norm = torch.nn.Sequential(model.norm, encoder_global)
+        elif args.add_global in [57, 64, 66, 69, 73, 61, 62, 77]:
+            # 61, 62 is for half batch
+            # model.norm = torch.nn.Sequential(model.norm, encoder_global)
+            res_blocks = []
+            first_enc = TransformerDecorator1(args.add_global, num_features, args.eval_global,
+                                              dropout=args.dropout, small_seq=args.small_seq, args=args, first_layer=True, drop_path=args.drop_path_bt)
+            old_enc = first_enc.encoder_layers
+            del old_enc
+            first_enc.encoder_layers = encoder_global.encoder_layers
+            if args.no_grad_bt:
+                first_enc.encoder_layers.requires_grad_(False)
+                encoder_global.encoder_layers.requires_grad_(False)
+            nums = 0
+            if args.insert_idx is not None and len(args.insert_idx) > 0:
+                insert_list = args.insert_idx
+            else:
+                insert_list = list(range(args.start_idx, len(insert_blocks)))
+            for i, block in enumerate(insert_blocks):
+                if args.no_fp16_bt and args.no_fp16_bt not in [4]:
+                    res_blocks.append(BlockWrap32(block, args.no_fp16_bt))
+                else:
+                    res_blocks.append(block)
+                if i in insert_list:
+                    if insert_list[0] == i: # first layer
+                        res_blocks.append(first_enc)
+                        first_enc = None
+                    else:
+                        if not args.shared_bt:
+                            encoder_global = TransformerDecorator1(args.add_global, num_features, args.eval_global, dropout=args.dropout,
+                                                                   small_seq=args.small_seq, args=args, drop_path=args.drop_path_bt)
+                        res_blocks.append(encoder_global)
+            # model.norm = torch.nn.Identity()
+            if args.add_norm_bt:
+                if not args.shared_bt:
+                    encoder_global = TransformerDecorator1(args.add_global, num_features, args.eval_global, dropout=args.dropout,
+                                                           small_seq=args.small_seq, args=args, drop_path=args.drop_path_bt)
+
+                model.norm = torch.nn.Sequential(model.norm, encoder_global)
+        else:
+            res_blocks = insert_blocks
+            
+        if args.put_decoder:
+            model.decoder_blocks = torch.nn.Sequential(*res_blocks)
+        else:
+            model.blocks = torch.nn.Sequential(*res_blocks)
+        print(model)
 
     if args.finetune and not args.eval:
         checkpoint = torch.load(args.finetune, map_location='cpu')
